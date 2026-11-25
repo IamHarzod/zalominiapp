@@ -9,6 +9,8 @@ import {
 import { AppProps } from "zmp-ui/app";
 
 import HomePage from "@/pages/index";
+import HistoryPage from "@/pages/history";
+import LeaveRequestPage from "@/pages/leave-request";
 
 const Layout = () => {
   return (
@@ -16,7 +18,9 @@ const Layout = () => {
       <SnackbarProvider>
         <ZMPRouter>
           <AnimationRoutes>
-            <Route path="/" element={<HomePage />}></Route>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/leave-request" element={<LeaveRequestPage />} />
           </AnimationRoutes>
         </ZMPRouter>
       </SnackbarProvider>
