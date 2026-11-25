@@ -204,13 +204,12 @@ export default function LeaveRequestPage() {
                     </Text>
                   </Box>
                   <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      req.status === 'APPROVED'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : req.status === 'REJECTED'
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${req.status === 'APPROVED'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : req.status === 'REJECTED'
                         ? 'bg-rose-100 text-rose-700'
                         : 'bg-amber-100 text-amber-700'
-                    }`}
+                      }`}
                   >
                     {req.status}
                   </span>
@@ -225,3 +224,4 @@ export default function LeaveRequestPage() {
     </Page>
   );
 }
+

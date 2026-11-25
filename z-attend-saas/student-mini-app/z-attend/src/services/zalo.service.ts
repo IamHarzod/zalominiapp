@@ -12,44 +12,39 @@ export function isRunningInZaloApp(): boolean {
 }
 
 export async function getZaloAccessTokenSafe(): Promise<string> {
-  if (!isRunningInZaloApp()) return 'DEV_sv_web_01';
+  if (!isRunningInZaloApp()) return 'test_sv_web_01';
   try {
     return await getAccessToken({});
   } catch {
-    return 'DEV_sv_web_01';
+    return 'test_sv_web_01';
   }
 }
 
 export async function getZaloPhoneTokenSafe(): Promise<string> {
-  if (!isRunningInZaloApp()) return 'DEV_PHONE_TOKEN';
+  if (!isRunningInZaloApp()) return '0987654321';
   try {
     const res = await getPhoneNumber({});
-    return res.token || 'DEV_PHONE_TOKEN';
+    return res.token || '0987654321';
   } catch {
-    return 'DEV_PHONE_TOKEN';
+    return '0987654321';
   }
 }
 
 export async function getZaloLocationTokenSafe(): Promise<{
-  locationToken: string;
-  devLat?: number;
-  devLng?: number;
+  lat: number;
+  long: number;
 }> {
   if (!isRunningInZaloApp()) {
-    return { locationToken: 'DEV_LOCATION_TOKEN', devLat: 10.7769, devLng: 106.7009 };
+    return { lat: 10.7769, long: 106.7009 };
   }
   try {
     const res: any = await getLocation({});
-    if (res?.token) {
-      return { locationToken: res.token };
-    }
     return {
-      locationToken: 'DEV_LOCATION_TOKEN',
-      devLat: Number(res?.latitude || 10.7769),
-      devLng: Number(res?.longitude || 106.7009),
+      lat: Number(res?.latitude || 10.7769),
+      long: Number(res?.longitude || 106.7009),
     };
   } catch {
-    return { locationToken: 'DEV_LOCATION_TOKEN', devLat: 10.7769, devLng: 106.7009 };
+    return { lat: 10.7769, long: 106.7009 };
   }
 }
 
@@ -83,3 +78,4 @@ export async function pickEvidenceImages(): Promise<string[]> {
     return [];
   }
 }
+

@@ -42,7 +42,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     try {
       const phoneToken = await getZaloPhoneTokenSafe();
       const response = await apiService.post(
-        '/auth/bind-student',
+        '/auth/student/bind-profile',
         {
           studentCode: studentCode.trim(),
           fullName: fullName.trim(),
@@ -120,3 +120,4 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     </Modal>
   );
 };
+
