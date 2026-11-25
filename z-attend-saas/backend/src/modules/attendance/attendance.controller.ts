@@ -83,4 +83,44 @@ export class AttendanceController {
       data: result,
     };
   }
+
+  /**
+   * SINH VIÊN: Xem các lớp học đang mở trong trường để đăng ký
+   * GET /api/v1/attendance/available-classes
+   */
+  @Get('available-classes')
+  async getAvailableClasses(@CurrentUser('id') studentId: string) {
+    return {
+      statusCode: HttpStatus.OK,
+      data: await this.attendanceService.getAvailableClasses(studentId),
+    };
+  }
+
+  /**
+   * SINH VIÊN: Xem danh sách các lớp đã đăng ký tham gia
+   * GET /api/v1/attendance/my-classes
+   */
+  @Get('my-classes')
+  async getMyClasses(@CurrentUser('id') studentId: string) {
+    return {
+      statusCode: HttpStatus.OK,
+      data: await this.attendanceService.getMyEnrolledClasses(studentId),
+    };
+  }
+
+  /**
+   * SINH VIÊN: Đăng ký tham gia vào lớp học đã tồn tại
+   * POST /api/v1/attendance/enroll
+   */
+  @Post('enroll')
+  @HttpCode(HttpStatus.CREATED)
+  async enrollClass(
+    @CurrentUser('id') studentId: string,
+    @Body('classId') classId: string,
+  ) {
+    return {
+      statusCode: HttpStatus.CREATED,
+      data: await this.attendanceService.enrollClass(studentId, classId),
+    };
+  }
 }

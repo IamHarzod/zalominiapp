@@ -5,6 +5,7 @@ import {
   AttendanceRecord,
   Classroom,
   ClassEnrollment,
+  User,
 } from '../../entities';
 import { AttendanceService } from './attendance.service';
 import { AttendanceController } from './attendance.controller';
@@ -17,6 +18,7 @@ import { AttendanceGateway } from './attendance.gateway';
       AttendanceRecord,
       Classroom,
       ClassEnrollment,
+      User,
     ]),
   ],
   controllers: [AttendanceController],

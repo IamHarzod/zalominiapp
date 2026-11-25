@@ -41,6 +41,12 @@ export class User {
   @Column({ type: 'varchar', length: 150, name: 'full_name' })
   fullName: string;
 
+  @Column({ type: 'varchar', length: 200, nullable: true, name: 'school_name' })
+  schoolName: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, name: 'administrative_class' })
+  administrativeClass: string | null;
+
   @Column({ type: 'varchar', length: 500, nullable: true, name: 'avatar_url' })
   avatarUrl: string | null;
 

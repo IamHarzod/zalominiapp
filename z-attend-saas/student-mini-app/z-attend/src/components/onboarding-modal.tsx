@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Box, Button, Input, Modal, Text, useSnackbar } from 'zmp-ui';
+import React, { useEffect, useState } from 'react';
+import { Box, Button, Input, Modal, Select, Text, useSnackbar } from 'zmp-ui';
 import { useAtom } from 'jotai';
 import {
   accessTokenAtom,
@@ -8,6 +8,8 @@ import {
 } from '@/state/auth.state';
 import apiService from '@/services/api.service';
 import { getZaloPhoneTokenSafe } from '@/services/zalo.service';
+
+const { Option } = Select;
 
 interface OnboardingModalProps {
   visible: boolean;
@@ -20,6 +22,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   defaultName = '',
   onSuccess,
 }) => {
+  const [schoolName, setSchoolName] = useState('Trường Đại học Công nghệ Thông tin (UIT)');
+  const [administrativeClass, setAdministrativeClass] = useState('');
   const [studentCode, setStudentCode] = useState('');
   const [fullName, setFullName] = useState(defaultName);
   const [loading, setLoading] = useState(false);
@@ -29,10 +33,21 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [, setUser] = useAtom(userAtom);
   const { openSnackbar } = useSnackbar();
 
+  useEffect(() => {
+    if (defaultName && !fullName) {
+      setFullName(defaultName);
+    }
+  }, [defaultName]);
+
   const handleBindAccount = async () => {
-    if (!studentCode.trim() || !fullName.trim()) {
+    if (
+      !schoolName.trim() ||
+      !administrativeClass.trim() ||
+      !studentCode.trim() ||
+      !fullName.trim()
+    ) {
       openSnackbar({
-        text: 'Vui lòng nhập đầy đủ MSSV và Họ tên!',
+        text: 'Vui lòng khai báo đầy đủ Trường, Lớp, MSSV và Họ tên!',
         type: 'warning',
       });
       return;
@@ -44,6 +59,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       const response = await apiService.post(
         '/auth/student/bind-profile',
         {
+          schoolName: schoolName.trim(),
+          administrativeClass: administrativeClass.trim(),
           studentCode: studentCode.trim(),
           fullName: fullName.trim(),
           phoneToken,
@@ -61,14 +78,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       setUser(user);
 
       openSnackbar({
-        text: 'Liên kết MSSV & Số điện thoại thành công!',
+        text: 'Khai báo thông tin sinh viên thành công!',
         type: 'success',
       });
       onSuccess();
     } catch (error: any) {
       const errMsg =
         error?.response?.data?.message ||
-        'Không thể liên kết tài khoản. Vui lòng thử lại.';
+        'Không thể cập nhật thông tin. Vui lòng thử lại.';
       openSnackbar({
         text: errMsg,
         type: 'error',
@@ -82,10 +99,46 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   return (
     <Modal
       visible={visible}
-      title="Khóa Định danh Sinh viên"
-      description="Tài khoản Zalo này sẽ được gắn cố định với MSSV và Số điện thoại của bạn để chống điểm danh hộ."
+      title="Bước 2: Khai báo Thông tin Sinh viên"
+      description="Hoàn tất thông tin trường, lớp và mã sinh viên để tham gia các lớp học."
     >
-      <Box className="space-y-4 pt-2">
+      <Box className="space-y-3 pt-2">
+        <Box>
+          <Select
+            label="Trường đang theo học"
+            value={schoolName}
+            onChange={(val) => setSchoolName(String(val))}
+          >
+            <Option
+              value="Trường Đại học Công nghệ Thông tin (UIT)"
+              title="ĐH Công nghệ Thông tin (UIT)"
+            />
+            <Option
+              value="Trường Đại học Bách Khoa (HCMUT)"
+              title="ĐH Bách Khoa (HCMUT)"
+            />
+            <Option
+              value="Trường Đại học Khoa học Tự nhiên (HCMUS)"
+              title="ĐH Khoa học Tự nhiên (HCMUS)"
+            />
+            <Option
+              value="Trường Đại học FPT"
+              title="ĐH FPT"
+            />
+          </Select>
+        </Box>
+
+        <Box>
+          <Text size="small" className="mb-1 font-medium text-slate-700">
+            Lớp sinh hoạt / Ngành
+          </Text>
+          <Input
+            placeholder="Ví dụ: KTPM2021"
+            value={administrativeClass}
+            onChange={(e) => setAdministrativeClass(e.target.value)}
+          />
+        </Box>
+
         <Box>
           <Text size="small" className="mb-1 font-medium text-slate-700">
             Mã số Sinh viên (MSSV)
@@ -99,7 +152,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
         <Box>
           <Text size="small" className="mb-1 font-medium text-slate-700">
-            Họ và Tên đầy đủ
+            Họ và Tên (từ Zalo)
           </Text>
           <Input
             placeholder="Ví dụ: Nguyễn Văn A"
@@ -114,10 +167,9 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           onClick={handleBindAccount}
           className="mt-2 bg-blue-600"
         >
-          Chia sẻ SĐT & Kích hoạt
+          Hoàn tất & Chọn Lớp học
         </Button>
       </Box>
     </Modal>
   );
 };
-

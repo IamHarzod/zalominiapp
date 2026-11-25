@@ -14,8 +14,11 @@ import {
   AttendanceRecord,
   AttendanceStatus,
   Classroom,
+  ClassEnrollment,
+  EnrollmentStatus,
   User,
   UserRole,
+  UserStatus,
 } from '../../entities';
 import { RedisService } from '../redis/redis.service';
 import { AttendanceGateway } from './attendance.gateway';
@@ -34,6 +37,10 @@ export class AttendanceService {
     private readonly recordRepository: Repository<AttendanceRecord>,
     @InjectRepository(Classroom)
     private readonly classroomRepository: Repository<Classroom>,
+    @InjectRepository(ClassEnrollment)
+    private readonly enrollmentRepository: Repository<ClassEnrollment>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly redisService: RedisService,
     private readonly attendanceGateway: AttendanceGateway,
   ) {}
@@ -280,6 +287,136 @@ export class AttendanceService {
           distanceMeters: rec.distanceMeters,
           status: rec.status,
         })) || [],
+    };
+  }
+
+  /**
+   * 5. SINH VIÊN: Lấy danh sách các lớp học phần đang mở để đăng ký
+   */
+  async getAvailableClasses(studentId: string) {
+    let classes = await this.classroomRepository.find({
+      relations: { lecturer: true },
+      order: { createdAt: 'DESC' },
+    });
+
+    // Tự động tạo 2 lớp mẫu nếu hệ thống chưa có lớp nào để sinh viên test ngay
+    if (classes.length === 0) {
+      let demoLecturer = await this.userRepository.findOne({
+        where: { zaloUserId: 'demo_lecturer_01' },
+      });
+      if (!demoLecturer) {
+        demoLecturer = await this.userRepository.save(
+          this.userRepository.create({
+            zaloUserId: 'demo_lecturer_01',
+            fullName: 'TS. Nguyễn Văn Giảng',
+            phoneNumber: '0909000111',
+            role: UserRole.LECTURER,
+            status: UserStatus.ACTIVE,
+          }),
+        );
+      }
+
+      await this.classroomRepository.save([
+        this.classroomRepository.create({
+          code: 'IT001_K15',
+          name: 'Phát triển Ứng dụng Di động (Zalo Mini App)',
+          lecturerId: demoLecturer.id,
+          roomCode: 'Phòng B2.04',
+          defaultLat: 10.7769,
+          defaultLong: 106.7009,
+          allowedRadius: 100,
+        }),
+        this.classroomRepository.create({
+          code: 'SE104_N2',
+          name: 'Nhập môn Công nghệ Phần mềm',
+          lecturerId: demoLecturer.id,
+          roomCode: 'Phòng A102',
+          defaultLat: 10.7769,
+          defaultLong: 106.7009,
+          allowedRadius: 100,
+        }),
+      ]);
+
+      classes = await this.classroomRepository.find({
+        relations: { lecturer: true },
+        order: { createdAt: 'DESC' },
+      });
+    }
+
+    const myEnrolls = await this.enrollmentRepository.find({
+      where: { studentId, status: EnrollmentStatus.ENROLLED },
+    });
+    const enrolledIds = new Set(myEnrolls.map((e) => e.classId));
+
+    return classes.map((cls) => ({
+      id: cls.id,
+      code: cls.code,
+      name: cls.name,
+      roomCode: cls.roomCode,
+      lecturerName: cls.lecturer?.fullName || 'Giảng viên',
+      totalSessions: cls.totalSessions,
+      isEnrolled: enrolledIds.has(cls.id),
+    }));
+  }
+
+  /**
+   * 6. SINH VIÊN: Lấy danh sách các lớp đã đăng ký tham gia
+   */
+  async getMyEnrolledClasses(studentId: string) {
+    const enrolls = await this.enrollmentRepository.find({
+      where: { studentId, status: EnrollmentStatus.ENROLLED },
+      relations: { classEntity: { lecturer: true } } as any,
+      order: { enrolledAt: 'DESC' },
+    });
+
+    // Fallback load classroom info safely
+    const result: any[] = [];
+    for (const e of enrolls) {
+      const cls = await this.classroomRepository.findOne({
+        where: { id: e.classId },
+        relations: { lecturer: true },
+      });
+      if (cls) {
+        result.push({
+          id: cls.id,
+          code: cls.code,
+          name: cls.name,
+          roomCode: cls.roomCode,
+          lecturerName: cls.lecturer?.fullName || 'Giảng viên',
+          totalSessions: cls.totalSessions,
+          enrolledAt: e.enrolledAt,
+        });
+      }
+    }
+    return result;
+  }
+
+  /**
+   * 7. SINH VIÊN: Đăng ký tham gia vào 1 lớp học đã tồn tại
+   */
+  async enrollClass(studentId: string, classId: string) {
+    const cls = await this.classroomRepository.findOne({ where: { id: classId } });
+    if (!cls) {
+      throw new NotFoundException('Không tìm thấy lớp học phần.');
+    }
+
+    const existing = await this.enrollmentRepository.findOne({
+      where: { studentId, classId },
+    });
+    if (existing) {
+      return { message: 'Bạn đã đăng ký lớp học này rồi.', classId };
+    }
+
+    const enrollment = this.enrollmentRepository.create({
+      studentId,
+      classId,
+      status: EnrollmentStatus.ENROLLED,
+    });
+    await this.enrollmentRepository.save(enrollment);
+
+    return {
+      message: `Đăng ký lớp "${cls.name}" thành công!`,
+      classId: cls.id,
     };
   }
 }

@@ -5,6 +5,8 @@ export interface StudentUser {
   zaloUserId: string;
   studentCode: string;
   fullName: string;
+  schoolName?: string;
+  administrativeClass?: string;
   phoneNumber: string;
   avatarUrl?: string;
   role: string;

@@ -47,6 +47,8 @@ export class AuthService {
         zaloUserId: user.zaloUserId,
         studentCode: user.studentCode,
         fullName: user.fullName,
+        schoolName: user.schoolName,
+        administrativeClass: user.administrativeClass,
         phoneNumber: user.phoneNumber,
         avatarUrl: user.avatarUrl,
         role: user.role,
@@ -158,12 +160,14 @@ export class AuthService {
       });
     }
 
-    // 3. Khởi tạo tài khoản Sinh viên mới (Khóa cứng vĩnh viễn)
+    // 3. Khởi tạo tài khoản Sinh viên mới (Khóa cứng vĩnh viễn + Lưu Trường & Lớp)
     const newUser = this.userRepository.create({
       zaloUserId: tempUser.zaloUserId,
       studentCode: cleanStudentCode,
       phoneNumber,
       fullName: cleanFullName,
+      schoolName: dto.schoolName.trim(),
+      administrativeClass: dto.administrativeClass.trim().toUpperCase(),
       role: UserRole.STUDENT,
       status: UserStatus.ACTIVE,
     });
@@ -195,6 +199,8 @@ export class AuthService {
       zaloUserId: user.zaloUserId,
       studentCode: user.studentCode,
       fullName: user.fullName,
+      schoolName: user.schoolName,
+      administrativeClass: user.administrativeClass,
       phoneNumber: user.phoneNumber,
       avatarUrl: user.avatarUrl,
       role: user.role,
